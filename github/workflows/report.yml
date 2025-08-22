@@ -1,0 +1,52 @@
+name: exo-security-report
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 3 * * 1"  # Mondays 03:00 UTC
+
+jobs:
+  run-report:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PowerShell modules
+        shell: pwsh
+        run: |
+          Set-PSRepository -Name 'PSGallery' -InstallationPolicy Trusted
+          Install-Module ExchangeOnlineManagement -Scope CurrentUser -Force
+
+      - name: Import certificate from secrets
+        shell: pwsh
+        run: |
+          $pfxBytes = [System.Convert]::FromBase64String("${{ secrets.EXO_CERT_PFX_BASE64 }}")
+          $secure   = ConvertTo-SecureString "${{ secrets.EXO_CERT_PASSWORD }}" -AsPlainText -Force
+          $store = New-Object System.Security.Cryptography.X509Certificates.X509Store -ArgumentList 'My','CurrentUser'
+          $store.Open('ReadWrite')
+          $cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2
+          $cert.Import($pfxBytes, $secure, 'PersistKeySet')
+          $store.Add($cert)
+          $store.Close()
+          Write-Host "Imported cert with thumbprint: $($cert.Thumbprint)"
+
+          echo "CERT_THUMBPRINT=$($cert.Thumbprint)" >> $env:GITHUB_ENV
+
+      - name: Run report
+        shell: pwsh
+        run: |
+          cd scripts
+          .\ExO-SecurityReport.ps1 `
+            -Organization "${{ secrets.EXO_ORG }}" `
+            -AuthMode AppOnly `
+            -AppId "${{ secrets.EXO_APP_ID }}" `
+            -CertificateThumbprint "$env:CERT_THUMBPRINT" `
+            -OutputPath "..\output" `
+            -Verbose
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: exo-security-report
+          path: output/**
