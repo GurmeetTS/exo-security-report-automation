@@ -1,0 +1,36 @@
+# Output directories
+output/
+temp/
+tmp/
+
+# PowerShell module cache
+PSReadLine/
+
+# Sensitive files
+*.pfx
+*.p12
+*.cer
+*.crt
+*.key
+
+# Log files
+*.log
+
+# CSV output files (these are generated and shouldn't be committed)
+*.csv
+
+# Temporary PowerShell files
+*.tmp.ps1
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Test results
+TestResults/
