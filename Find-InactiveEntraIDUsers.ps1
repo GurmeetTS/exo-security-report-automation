@@ -67,7 +67,7 @@ function Connect-Graph {
     }
     Connect-MgGraph -AppId $AppId -CertificateThumbprint $CertificateThumbprint -TenantId $Organization
   } else {
-    $scopes = "User.Read.All", "AuditLog.Read.All"
+    $scopes = "User.Read.All", "AuditLog.Read.All", "Directory.Read.All"
     if ($Organization) {
         Connect-MgGraph -TenantId $Organization -Scopes $scopes
     } else {
@@ -80,16 +80,22 @@ function Connect-Graph {
 $ErrorActionPreference = 'Stop'
 Ensure-Module -Name Microsoft.Graph.Authentication
 Ensure-Module -Name Microsoft.Graph.Users
+Ensure-Module -Name Microsoft.Graph.Identity.DirectoryManagement
 
 if (-not (Test-Path $OutputPath)) { New-Item -ItemType Directory -Path $OutputPath -Force | Out-Null }
 
 try {
   Connect-Graph
+
+  Write-Host "Building license SKU lookup table..."
+  $skuLookup = @{}
+  Get-MgSubscribedSku -All | ForEach-Object { $skuLookup[$_.SkuId] = $_.SkuPartNumber }
+
   Write-Host "Finding users inactive for more than $InactiveDays days..."
   $cutoffDate = (Get-Date).AddDays(-$InactiveDays)
-  $inactiveUsers = Get-MgUser -All -Filter "userType eq 'Member' and accountEnabled eq true" -Property "displayName,userPrincipalName,signInActivity,userType,accountEnabled,assignedLicenses" | Where-Object {
+  $inactiveUsers = Get-MgUser -All -Filter "userType eq 'Member' and accountEnabled eq true" -Property "displayName,userPrincipalName,signInActivity,userType,accountEnabled,assignedLicenses,department" | Where-Object {
     $_.SignInActivity.LastSignInDateTime -eq $null -or $_.SignInActivity.LastSignInDateTime -lt $cutoffDate
-  } | Select-Object UserPrincipalName, DisplayName, @{Name="LastSignInDateTime"; Expression={$_.SignInActivity.LastSignInDateTime}}, @{Name="HasLicense"; Expression={($_.AssignedLicenses.Count -gt 0)}}
+  } | Select-Object UserPrincipalName, DisplayName, Department, @{Name="LastSignInDateTime"; Expression={$_.SignInActivity.LastSignInDateTime}}, @{Name="Licenses"; Expression={($_.AssignedLicenses.SkuId | ForEach-Object { $skuLookup[$_] }) -join '; '}}
 
   $fileName = "InactiveUsers-$($Organization)_$(Get-Date -Format 'yyyyMMddHHmmss').csv"
   $filePath = Join-Path $OutputPath $fileName
