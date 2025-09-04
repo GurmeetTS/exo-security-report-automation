@@ -87,7 +87,7 @@ try {
   Connect-Graph
   Write-Host "Finding users inactive for more than $InactiveDays days..."
   $cutoffDate = (Get-Date).AddDays(-$InactiveDays)
-  $inactiveUsers = Get-MgUser -All -Property "displayName,userPrincipalName,signInActivity" | Where-Object {
+  $inactiveUsers = Get-MgUser -All -Filter "userType eq 'Member' and accountEnabled eq true" -Property "displayName,userPrincipalName,signInActivity,userType,accountEnabled" | Where-Object {
     $_.SignInActivity.LastSignInDateTime -eq $null -or $_.SignInActivity.LastSignInDateTime -lt $cutoffDate
   } | Select-Object UserPrincipalName, DisplayName, @{Name="LastSignInDateTime"; Expression={$_.SignInActivity.LastSignInDateTime}}
 
