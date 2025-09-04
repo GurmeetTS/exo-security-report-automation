@@ -31,12 +31,21 @@ Automate a comprehensive **Exchange Online security posture** report using **Pow
 
 ## 🚀 Quick Start (interactive sign-in)
 
+## Generating a Security Report
+
 ```powershell
 # Clone or download this repo
 cd .\ExO-Security-Report-Automation\scripts
 
 # Run interactively
 .\ExO-SecurityReport.ps1 -Organization contoso.onmicrosoft.com -OutputPath ..\output
+```
+
+## Auditing Mailbox Logins
+
+```powershell
+# Example: Audit specific mailboxes
+.\Find-MailboxLogins.ps1 -Mailboxes "user1@contoso.com", "user2@contoso.com" -Organization contoso.onmicrosoft.com -OutputPath .\output
 ```
 
 Outputs will be in `./output` (CSVs + `SecuritySummary.md` + `SecuritySummary.html`).
