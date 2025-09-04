@@ -74,7 +74,7 @@ function Connect-ExO {
     }
     Connect-ExchangeOnline -AppId $AppId -CertificateThumbprint $CertificateThumbprint -Organization $Organization -ShowBanner:$false
   } else {
-    Connect-ExchangeOnline -Organization $Organization -ShowBanner:$false -UseRPSSecurityContext
+    Connect-ExchangeOnline -Organization $Organization -ShowBanner:$false
   }
 }
 
