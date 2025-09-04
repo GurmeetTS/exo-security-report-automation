@@ -44,8 +44,8 @@ cd .\ExO-Security-Report-Automation\scripts
 ## Auditing Mailbox Logins
 
 ```powershell
-# Example: Audit specific mailboxes
-.\Find-MailboxLogins.ps1 -Mailboxes "user1@contoso.com", "user2@contoso.com" -Organization contoso.onmicrosoft.com -OutputPath .\output
+# Example: Audit a pre-defined list of mailboxes
+.\Find-MailboxLogins.ps1 -OutputPath .\output
 ```
 
 Outputs will be in `./output` (CSVs + `SecuritySummary.md` + `SecuritySummary.html`).

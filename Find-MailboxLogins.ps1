@@ -1,16 +1,11 @@
 <#
 .SYNOPSIS
-  Audits mailbox login events for specified mailboxes in Exchange Online.
+  Audits mailbox login events for a pre-defined list of mailboxes in Exchange Online.
 
 .DESCRIPTION
   This script connects to Exchange Online and uses the Search-MailboxAuditLog cmdlet
-  to find login events for a list of mailboxes. The results are exported to a CSV file.
-
-.PARAMETER Mailboxes
-  An array of mailbox email addresses to audit.
-
-.PARAMETER Organization
-  The Office 365 organization (e.g., contoso.onmicrosoft.com).
+  to find login events for a hardcoded list of mailboxes. The results are exported to a CSV file.
+  The script is pre-configured for the 'newvision-software.com' organization.
 
 .PARAMETER AuthMode
   The authentication mode. Can be 'Interactive' or 'AppOnly'. Defaults to 'Interactive'.
@@ -25,20 +20,14 @@
   The directory where the CSV report will be saved.
 
 .EXAMPLE
-  .\Find-MailboxLogins.ps1 -Mailboxes "user1@contoso.com", "user2@contoso.com" -Organization contoso.onmicrosoft.com -OutputPath .\output
+  .\Find-MailboxLogins.ps1 -OutputPath .\output
 
 .EXAMPLE
-  .\Find-MailboxLogins.ps1 -Mailboxes "user1@contoso.com" -Organization contoso.onmicrosoft.com -AuthMode AppOnly -AppId <appId> -CertificateThumbprint <thumb> -OutputPath .\output
+  .\Find-MailboxLogins.ps1 -AuthMode AppOnly -AppId <appId> -CertificateThumbprint <thumb> -OutputPath .\output
 #>
 
 [CmdletBinding()]
 param(
-  [Parameter(Mandatory=$true)]
-  [string[]]$Mailboxes,
-
-  [Parameter(Mandatory=$true)]
-  [string]$Organization,
-
   [Parameter(Mandatory=$false)]
   [ValidateSet('Interactive','AppOnly')]
   [string]$AuthMode = 'Interactive',
@@ -52,6 +41,22 @@ param(
   [Parameter(Mandatory=$false)]
   [string]$OutputPath = ".\output"
 )
+
+# --- Configuration ---
+$Mailboxes = @(
+    "notification@newvision-software.com",
+    "finance_team@newvision-software.com",
+    "newvision.accountspayable@newvision-software.com",
+    "nv_ads@newvision-software.com",
+    "analytics.testing@newvision-software.com",
+    "deloitte_pmo@newvision-software.com",
+    "trainings@newvision-software.com",
+    "Adobe@newvision-software.com",
+    "legal@newvision-software.com",
+    "NVLeadershipdevelopment@newvision-software.com"
+)
+$Organization = "newvision-software.com"
+# ---------------------
 
 function Ensure-Module {
   param([string]$Name)
@@ -69,7 +74,7 @@ function Connect-ExO {
     }
     Connect-ExchangeOnline -AppId $AppId -CertificateThumbprint $CertificateThumbprint -Organization $Organization -ShowBanner:$false
   } else {
-    Connect-ExchangeOnline -Organization $Organization -ShowBanner:$false
+    Connect-ExchangeOnline -Organization $Organization -ShowBanner:$false -UseRPSSecurityContext
   }
 }
 
